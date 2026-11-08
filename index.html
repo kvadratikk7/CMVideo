@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CMVideo — IFrame Edition</title>
+    <title>CMVideo — Mobile & Edit Edition</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -522,6 +522,21 @@
             font-size: 0.85rem;
         }
 
+        .admin-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-edit {
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
         .btn-delete {
             background: #d32f2f;
             color: #fff;
@@ -656,13 +671,15 @@
                 <div id="adminAuth">
                     <div class="form-group">
                         <label>Введите код доступа:</label>
-                        <input type="password" id="adminCodeInput" placeholder="Код (2452_1726)">
+                        <input type="password" id="adminCodeInput" placeholder="Введите код">
                     </div>
                     <button class="btn-submit" style="width: 100%; margin-top: 10px;" onclick="verifyAdmin()">Войти</button>
                 </div>
 
                 <div id="adminPanel" style="display: none;">
-                    <h4 style="margin-bottom: 12px;">Добавить контент</h4>
+                    <h4 id="adminFormHeader" style="margin-bottom: 12px;">Добавить контент</h4>
+                    <input type="hidden" id="editMediaId" value="">
+
                     <div class="form-group">
                         <label>Название</label>
                         <input type="text" id="addTitle" placeholder="Пример: Наруто">
@@ -677,17 +694,17 @@
 
                     <!-- Video Source: supports direct link or iframe embed code -->
                     <div class="form-group">
-                        <label>Прямая ссылка на видео ИЛИ IFrame код (например: &lt;iframe src="..."&gt;&lt;/iframe&gt;)</label>
+                        <label>Ссылка на видео ИЛИ IFrame код</label>
                         <input type="text" id="addVideoUrl" placeholder="https://...mp4 ИЛИ тег iframe">
                     </div>
 
                     <!-- File Upload Cover 1:1 Image from Phone -->
                     <div class="form-group">
-                        <label>Обложка (Загрузить фото 1:1 с телефона)</label>
+                        <label>Обложка (1:1 с телефона)</label>
                         <div class="file-input-wrapper">
                             <label class="file-label" for="coverFileInput"><i class="fas fa-image"></i> Выбрать фото обложки</label>
                             <input type="file" id="coverFileInput" accept="image/*" onchange="handleCoverSelect(this)">
-                            <div class="file-name-preview" id="coverFileName">Файл не выбран</div>
+                            <div class="file-name-preview" id="coverFileName">Файл не выбран (или останется прежним)</div>
                         </div>
                     </div>
 
@@ -696,9 +713,12 @@
                         <textarea id="addDesc" placeholder="Краткое описание..."></textarea>
                     </div>
 
-                    <button class="btn-submit" style="width: 100%; margin-top: 10px;" onclick="addMediaItem()">Добавить в каталог</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-submit" id="btnSaveMedia" style="flex: 1;" onclick="addOrUpdateMediaItem()">Добавить в каталог</button>
+                        <button class="btn-submit" id="btnCancelEdit" style="background: #444; display: none;" onclick="resetAdminForm()">Отмена</button>
+                    </div>
 
-                    <h4 style="margin-top: 25px; margin-bottom: 10px;">Список видео:</h4>
+                    <h4 style="margin-top: 25px; margin-bottom: 10px;">Список видео (Редактирование / Удаление):</h4>
                     <div id="adminMediaList"></div>
                 </div>
             </div>
@@ -824,7 +844,7 @@
             renderGrid('all', document.getElementById('searchInput').value);
         }
 
-        /* Player with Smart IFrame / Video detection */
+        /* Player */
         function openPlayer(id) {
             currentItem = mediaData.find(m => m.id === id);
             if (!currentItem) return;
@@ -835,11 +855,10 @@
             const container = document.getElementById('playerContainer');
             const controlsBar = document.getElementById('controlsBar');
             
-            // Check if videoUrl is an iframe tag or contains iframe/embed link
             const isIframe = currentItem.videoUrl.trim().toLowerCase().startsWith('<iframe') || currentItem.videoUrl.includes('vewo.io') || currentItem.videoUrl.includes('embed');
 
             if (isIframe) {
-                controlsBar.style.display = 'none'; // Hide native video speed/quality controls for iframe embeds
+                controlsBar.style.display = 'none';
                 let iframeCode = currentItem.videoUrl;
                 if (!iframeCode.toLowerCase().startsWith('<iframe')) {
                     iframeCode = `<iframe src="${currentItem.videoUrl}" allowfullscreen></iframe>`;
@@ -950,7 +969,7 @@
             });
         }
 
-        /* Admin & Photo Upload */
+        /* Admin, Upload & Editing */
         function openAdminModal() {
             document.getElementById('adminModal').style.display = 'block';
         }
@@ -982,7 +1001,8 @@
             reader.readAsDataURL(file);
         }
 
-        function addMediaItem() {
+        function addOrUpdateMediaItem() {
+            const editId = document.getElementById('editMediaId').value;
             const title = document.getElementById('addTitle').value.trim();
             const type = document.getElementById('addType').value;
             const videoUrl = document.getElementById('addVideoUrl').value.trim();
@@ -993,31 +1013,69 @@
                 return;
             }
 
-            const newItem = {
-                id: Date.now(),
-                title: title,
-                type: type,
-                videoUrl: videoUrl,
-                posterUrl: tempCoverBase64 || 'https://via.placeholder.com/500?text=Обложка',
-                desc: desc || 'Без описания.',
-                isNew: true,
-                views: 0,
-                reviews: []
-            };
+            if (editId) {
+                // Editing existing item
+                const targetIndex = mediaData.findIndex(m => m.id == editId);
+                if (targetIndex !== -1) {
+                    mediaData[targetIndex].title = title;
+                    mediaData[targetIndex].type = type;
+                    mediaData[targetIndex].videoUrl = videoUrl;
+                    mediaData[targetIndex].desc = desc || 'Без описания.';
+                    if (tempCoverBase64) {
+                        mediaData[targetIndex].posterUrl = tempCoverBase64;
+                    }
+                }
+                alert('Элемент успешно обновлен!');
+            } else {
+                // Adding new item
+                const newItem = {
+                    id: Date.now(),
+                    title: title,
+                    type: type,
+                    videoUrl: videoUrl,
+                    posterUrl: tempCoverBase64 || 'https://via.placeholder.com/500?text=Обложка',
+                    desc: desc || 'Без описания.',
+                    isNew: true,
+                    views: 0,
+                    reviews: []
+                };
+                mediaData.unshift(newItem);
+                alert('Медиафайл успешно добавлен!');
+            }
 
-            mediaData.unshift(newItem);
             saveData();
             renderGrid();
             renderAdminMediaList();
+            resetAdminForm();
+        }
 
-            // Reset Form
+        function editMediaItem(id) {
+            const item = mediaData.find(m => m.id === id);
+            if (!item) return;
+
+            document.getElementById('editMediaId').value = item.id;
+            document.getElementById('addTitle').value = item.title;
+            document.getElementById('addType').value = item.type;
+            document.getElementById('addVideoUrl').value = item.videoUrl;
+            document.getElementById('addDesc').value = item.desc;
+            
+            document.getElementById('adminFormHeader').innerText = 'Редактировать контент';
+            document.getElementById('btnSaveMedia').innerText = 'Сохранить изменения';
+            document.getElementById('btnCancelEdit').style.display = 'block';
+            document.getElementById('coverFileName').innerText = 'Оставьте пустым, чтобы не менять обложку';
+        }
+
+        function resetAdminForm() {
+            document.getElementById('editMediaId').value = '';
             document.getElementById('addTitle').value = '';
             document.getElementById('addVideoUrl').value = '';
             document.getElementById('addDesc').value = '';
-            document.getElementById('coverFileName').innerText = 'Файл не выбран';
+            document.getElementById('coverFileName').innerText = 'Файл не выбран (или останется прежним)';
             tempCoverBase64 = '';
 
-            alert('Медиафайл успешно добавлен в каталог!');
+            document.getElementById('adminFormHeader').innerText = 'Добавить контент';
+            document.getElementById('btnSaveMedia').innerText = 'Добавить в каталог';
+            document.getElementById('btnCancelEdit').style.display = 'none';
         }
 
         function deleteMediaItem(id) {
@@ -1026,6 +1084,7 @@
                 saveData();
                 renderGrid();
                 renderAdminMediaList();
+                resetAdminForm();
             }
         }
 
@@ -1037,7 +1096,10 @@
                 el.className = 'admin-item';
                 el.innerHTML = `
                     <span><strong>${m.title}</strong> (${m.type === 'movie' ? 'Фильм' : 'Мульт'})</span>
-                    <button class="btn-delete" onclick="deleteMediaItem(${m.id})">Удалить</button>
+                    <div class="admin-actions">
+                        <button class="btn-edit" onclick="editMediaItem(${m.id})">Редактировать</button>
+                        <button class="btn-delete" onclick="deleteMediaItem(${m.id})">Удалить</button>
+                    </div>
                 `;
                 container.appendChild(el);
             });
