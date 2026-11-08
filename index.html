@@ -166,7 +166,6 @@
             display: flex;
             align-items: center;
             gap: 12px;
-
         }
 
         .drawer-item.active, .drawer-item:hover {
@@ -217,6 +216,7 @@
             border: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
+            cursor: pointer;
         }
 
         .card-img-wrap {
@@ -388,6 +388,7 @@
             gap: 6px;
             font-size: 1.3rem;
             color: #444;
+            cursor: pointer;
         }
 
         .star-rating i.active {
@@ -476,7 +477,7 @@
         .file-input-wrapper {
             background: var(--card-bg);
             border: 1px dashed var(--border-color);
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             text-align: center;
         }
@@ -517,6 +518,7 @@
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 0.75rem;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -643,7 +645,7 @@
                 <div id="adminAuth">
                     <div class="form-group">
                         <label>Введите код доступа:</label>
-                        <input type="password" id="adminCodeInput" placeholder="Код (2452_1726)">
+                        <input type="password" id="adminCodeInput" placeholder="Введите код">
                     </div>
                     <button class="btn-submit" style="width: 100%; margin-top: 10px;" onclick="verifyAdmin()">Войти</button>
                 </div>
@@ -662,23 +664,19 @@
                         </select>
                     </div>
 
-                    <!-- File Upload Cover 1:1 -->
+                    <!-- Direct Video URL Link Input -->
                     <div class="form-group">
-                        <label>Обложка (Формат 1:1 квадрат)</label>
-                        <div class="file-input-wrapper">
-                            <label class="file-label" for="coverFileInput"><i class="fas fa-upload"></i> Выбрать фото с телефона</label>
-                            <input type="file" id="coverFileInput" accept="image/*" onchange="handleFileSelect(this, 'cover')">
-                            <div class="file-name-preview" id="coverFileName">Файл не выбран</div>
-                        </div>
+                        <label>Ссылка на видео (MP4 / WebM / Прямая ссылка)</label>
+                        <input type="text" id="addVideoUrl" placeholder="https://commondatastorage.googleapis.com/...mp4">
                     </div>
 
-                    <!-- File Upload Video -->
+                    <!-- File Upload Cover 1:1 Image from Phone -->
                     <div class="form-group">
-                        <label>Видео файл</label>
+                        <label>Обложка (Загрузить фото 1:1 с телефона)</label>
                         <div class="file-input-wrapper">
-                            <label class="file-label" for="videoFileInput"><i class="fas fa-file-video"></i> Выбрать видео с телефона</label>
-                            <input type="file" id="videoFileInput" accept="video/*" onchange="handleFileSelect(this, 'video')">
-                            <div class="file-name-preview" id="videoFileName">Файл не выбран</div>
+                            <label class="file-label" for="coverFileInput"><i class="fas fa-image"></i> Выбрать фото обложки</label>
+                            <input type="file" id="coverFileInput" accept="image/*" onchange="handleCoverSelect(this)">
+                            <div class="file-name-preview" id="coverFileName">Файл не выбран</div>
                         </div>
                     </div>
 
@@ -687,7 +685,7 @@
                         <textarea id="addDesc" placeholder="Краткое описание..."></textarea>
                     </div>
 
-                    <button class="btn-submit" style="width: 100%; margin-top: 10px;" onclick="addMediaItem()">Загрузить на сайт</button>
+                    <button class="btn-submit" style="width: 100%; margin-top: 10px;" onclick="addMediaItem()">Добавить в каталог</button>
 
                     <h4 style="margin-top: 25px; margin-bottom: 10px;">Список видео:</h4>
                     <div id="adminMediaList"></div>
@@ -697,7 +695,7 @@
     </div>
 
     <script>
-        // Sample Base64 / Working Video Data
+        // Working Demo Videos with MP4 URLs
         const defaultData = [
             {
                 id: 1,
@@ -728,20 +726,17 @@
         let mediaData = JSON.parse(localStorage.getItem('cmvideo_mobile_db')) || defaultData;
         let currentItem = null;
         let selectedRating = 5;
-
-        // Temporary Base64 Data holders for File Inputs
         let tempCoverBase64 = '';
-        let tempVideoBase64 = '';
 
         function saveData() {
             try {
                 localStorage.setItem('cmvideo_mobile_db', JSON.stringify(mediaData));
             } catch(e) {
-                alert('Память LocalStorage переполнена! Рекомендуется использовать видео поменьше.');
+                alert('Память устройства переполнена! Выберите изображение меньшего размера.');
             }
         }
 
-        /* Drawer functionality */
+        /* Side Drawer */
         function toggleDrawer(open) {
             const drawer = document.getElementById('sideDrawer');
             const overlay = document.getElementById('drawerOverlay');
@@ -820,7 +815,7 @@
             renderGrid('all', document.getElementById('searchInput').value);
         }
 
-        /* Player logic */
+        /* Player */
         function openPlayer(id) {
             currentItem = mediaData.find(m => m.id === id);
             if (!currentItem) return;
@@ -854,7 +849,7 @@
             document.getElementById('mainPlayer').playbackRate = parseFloat(val);
         }
 
-        /* Comments / Reviews & Deletion */
+        /* Comments */
         function setRating(val) {
             selectedRating = val;
             const stars = document.querySelectorAll('#starRating i');
@@ -925,7 +920,7 @@
             });
         }
 
-        /* Admin & File Handlers */
+        /* Admin & Photo Upload */
         function openAdminModal() {
             document.getElementById('adminModal').style.display = 'block';
         }
@@ -945,19 +940,14 @@
             }
         }
 
-        function handleFileSelect(input, type) {
+        function handleCoverSelect(input) {
             const file = input.files[0];
             if (!file) return;
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                if (type === 'cover') {
-                    tempCoverBase64 = e.target.result;
-                    document.getElementById('coverFileName').innerText = file.name;
-                } else if (type === 'video') {
-                    tempVideoBase64 = e.target.result;
-                    document.getElementById('videoFileName').innerText = file.name;
-                }
+                tempCoverBase64 = e.target.result;
+                document.getElementById('coverFileName').innerText = file.name;
             };
             reader.readAsDataURL(file);
         }
@@ -965,10 +955,11 @@
         function addMediaItem() {
             const title = document.getElementById('addTitle').value.trim();
             const type = document.getElementById('addType').value;
+            const videoUrl = document.getElementById('addVideoUrl').value.trim();
             const desc = document.getElementById('addDesc').value.trim();
 
-            if (!title || !tempCoverBase64 || !tempVideoBase64) {
-                alert('Пожалуйста, введите название, выберите фото обложки и файл видео с телефона!');
+            if (!title || !videoUrl) {
+                alert('Пожалуйста, введите название и укажите ссылку на видео!');
                 return;
             }
 
@@ -976,8 +967,8 @@
                 id: Date.now(),
                 title: title,
                 type: type,
-                posterUrl: tempCoverBase64,
-                videoUrl: tempVideoBase64,
+                videoUrl: videoUrl,
+                posterUrl: tempCoverBase64 || 'https://via.placeholder.com/500?text=Обложка',
                 desc: desc || 'Без описания.',
                 isNew: true,
                 views: 0,
@@ -989,19 +980,18 @@
             renderGrid();
             renderAdminMediaList();
 
-            // Clear inputs
+            // Reset Form
             document.getElementById('addTitle').value = '';
+            document.getElementById('addVideoUrl').value = '';
             document.getElementById('addDesc').value = '';
             document.getElementById('coverFileName').innerText = 'Файл не выбран';
-            document.getElementById('videoFileName').innerText = 'Файл не выбран';
             tempCoverBase64 = '';
-            tempVideoBase64 = '';
 
-            alert('Медиафайл успешно загружен и добавлен!');
+            alert('Видео успешно добавлено в каталог!');
         }
 
         function deleteMediaItem(id) {
-            if (confirm('Удалить этот фильм/мультфильм из каталога?')) {
+            if (confirm('Удалить этот элемент из каталога?')) {
                 mediaData = mediaData.filter(m => m.id !== id);
                 saveData();
                 renderGrid();
