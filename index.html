@@ -2,18 +2,17 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CMVideo — Онлайн Кинотеатр</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CMVideo — Mobile Edition</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0f1015;
-            --card-bg: #1a1c23;
+            --bg-color: #0d0e12;
+            --card-bg: #161820;
             --accent-color: #e50914;
-            --accent-hover: #b80710;
             --text-main: #f5f5f7;
             --text-secondary: #9ca3af;
-            --border-color: #2e323e;
+            --border-color: #262936;
             --star-gold: #ffc107;
         }
 
@@ -21,7 +20,8 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -30,138 +30,184 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            padding-bottom: 20px;
         }
 
+        /* Top Header Navigation */
         header {
-            background: rgba(15, 16, 21, 0.95);
+            background: rgba(22, 24, 32, 0.95);
             backdrop-filter: blur(10px);
             position: sticky;
             top: 0;
             z-index: 100;
             border-bottom: 1px solid var(--border-color);
-            padding: 1rem 2rem;
+            padding: 12px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 1rem;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 4px;
         }
 
         .logo-container {
             display: flex;
             align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: var(--text-main);
+            gap: 8px;
             cursor: pointer;
         }
 
         .logo-svg {
-            width: 42px;
-            height: 42px;
+            width: 32px;
+            height: 32px;
         }
 
         .logo-text {
-            font-size: 1.8rem;
+            font-size: 1.4rem;
             font-weight: 800;
-            letter-spacing: -1px;
             background: linear-gradient(45deg, #e50914, #ff5555);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        nav {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .nav-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 1rem;
-            font-weight: 600;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .nav-btn:hover, .nav-btn.active {
-            color: var(--text-main);
-            background: var(--card-bg);
-        }
-
-        .search-admin {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
+        /* Search Bar */
         .search-box {
             position: relative;
+            margin: 12px 16px;
         }
 
         .search-box input {
+            width: 100%;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 8px 16px 8px 38px;
+            border-radius: 12px;
+            padding: 10px 16px 10px 38px;
             color: var(--text-main);
             outline: none;
-            width: 220px;
-            transition: width 0.3s ease;
-        }
-
-        .search-box input:focus {
-            width: 280px;
-            border-color: var(--accent-color);
+            font-size: 0.95rem;
         }
 
         .search-box i {
             position: absolute;
-            left: 14px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-secondary);
         }
 
-        .admin-trigger {
-            background: linear-gradient(45deg, #333, #444);
-            color: #fff;
-            border: 1px solid var(--border-color);
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        /* Side Navigation Overlay Drawer */
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 200;
+            display: none;
         }
 
+        .side-drawer {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background: var(--card-bg);
+            z-index: 201;
+            transition: left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .side-drawer.open {
+            left: 0;
+        }
+
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .drawer-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .drawer-item {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.05rem;
+            text-align: left;
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+        }
+
+        .drawer-item.active, .drawer-item:hover {
+            background: rgba(229, 9, 20, 0.15);
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .admin-drawer-btn {
+            margin-top: auto;
+            background: #222533;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* Main Content */
         main {
-            max-width: 1300px;
-            margin: 0 auto;
-            padding: 2rem;
-            width: 100%;
+            padding: 0 16px;
             flex: 1;
         }
 
         .section-title {
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-size: 1.2rem;
+            margin: 10px 0 15px 0;
             border-left: 4px solid var(--accent-color);
-            padding-left: 10px;
+            padding-left: 8px;
         }
 
+        /* Media Grid 1:1 Aspect Ratio Cards */
         .media-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 20px;
-            margin-bottom: 3rem;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
         }
 
         .card {
@@ -169,24 +215,16 @@
             border-radius: 12px;
             overflow: hidden;
             border: 1px solid var(--border-color);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
-            position: relative;
             display: flex;
             flex-direction: column;
-        }
-
-        .card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
 
         .card-img-wrap {
             position: relative;
             width: 100%;
-            aspect-ratio: 600 / 900;
+            aspect-ratio: 1 / 1;
             overflow: hidden;
-            background: #222;
+            background: #000;
         }
 
         .card-img {
@@ -197,39 +235,37 @@
 
         .card-badge {
             position: absolute;
-            top: 8px;
-            right: 8px;
-            background: rgba(0,0,0,0.75);
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.75rem;
+            top: 6px;
+            right: 6px;
+            background: rgba(0,0,0,0.8);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
             font-weight: bold;
             color: var(--star-gold);
-            backdrop-filter: blur(4px);
         }
 
         .card-type {
             position: absolute;
-            top: 8px;
-            left: 8px;
+            top: 6px;
+            left: 6px;
             background: var(--accent-color);
-            padding: 2px 8px;
+            padding: 2px 6px;
             border-radius: 4px;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             font-weight: bold;
             text-transform: uppercase;
         }
 
         .card-info {
-            padding: 12px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            flex: 1;
+            gap: 4px;
         }
 
         .card-title {
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 700;
             white-space: nowrap;
             overflow: hidden;
@@ -237,16 +273,15 @@
         }
 
         .card-desc {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            line-height: 1.3;
         }
 
-        /* Modal Player View */
+        /* Player & Modal View */
         .modal {
             display: none;
             position: fixed;
@@ -254,41 +289,39 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             z-index: 1000;
             overflow-y: auto;
-            padding: 20px;
         }
 
         .modal-content {
-            max-width: 900px;
-            margin: 40px auto;
+            width: 100%;
+            min-height: 100%;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
             background: var(--card-bg);
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-            position: relative;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 1.8rem;
-            color: #fff;
-            cursor: pointer;
-            z-index: 10;
-        }
-
-        .player-wrapper {
-            position: relative;
+        .video-container {
             width: 100%;
             background: #000;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         video {
             width: 100%;
-            max-height: 500px;
+            max-height: 260px;
             display: block;
         }
 
@@ -297,71 +330,64 @@
             align-items: center;
             justify-content: space-between;
             background: #111;
-            padding: 10px 15px;
-            gap: 15px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
             border-bottom: 1px solid var(--border-color);
         }
 
-        .player-controls-bar select, .player-controls-bar button {
+        .player-controls-bar select {
             background: var(--card-bg);
-            color: var(--text-main);
+            color: #fff;
             border: 1px solid var(--border-color);
-            padding: 6px 12px;
+            padding: 4px 8px;
             border-radius: 6px;
-            cursor: pointer;
-            outline: none;
         }
 
         .details-container {
-            padding: 20px;
+            padding: 16px;
         }
 
         .details-title {
-            font-size: 1.8rem;
-            margin-bottom: 8px;
+            font-size: 1.3rem;
+            margin-bottom: 6px;
         }
 
         .details-meta {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-bottom: 15px;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
         }
 
         .details-desc {
-            line-height: 1.6;
-            margin-bottom: 25px;
-            color: #ddd;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: #ccc;
+            margin-bottom: 20px;
         }
 
-        /* Reviews Section */
+        /* Comments / Reviews Section */
         .reviews-section {
             border-top: 1px solid var(--border-color);
-            padding-top: 20px;
-        }
-
-        .reviews-header {
-            font-size: 1.2rem;
-            margin-bottom: 15px;
+            padding-top: 16px;
         }
 
         .add-review-form {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin-bottom: 20px;
-            background: #12141a;
-            padding: 15px;
-            border-radius: 8px;
+            margin-bottom: 16px;
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 10px;
         }
 
         .star-rating {
             display: flex;
-            gap: 5px;
-            font-size: 1.4rem;
-            color: #555;
-            cursor: pointer;
+            gap: 6px;
+            font-size: 1.3rem;
+            color: #444;
         }
 
         .star-rating i.active {
@@ -370,97 +396,118 @@
 
         .add-review-form textarea {
             width: 100%;
-            background: var(--card-bg);
+            background: #101117;
             border: 1px solid var(--border-color);
             color: var(--text-main);
-            border-radius: 6px;
-            padding: 10px;
-            resize: vertical;
-            height: 70px;
+            border-radius: 8px;
+            padding: 8px;
+            height: 60px;
+            font-size: 0.85rem;
             outline: none;
+            resize: none;
         }
 
         .btn-submit {
-            align-self: flex-end;
             background: var(--accent-color);
             color: #fff;
             border: none;
-            padding: 8px 18px;
+            padding: 8px 14px;
             border-radius: 6px;
-            cursor: pointer;
             font-weight: bold;
-        }
-
-        .reviews-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+            font-size: 0.85rem;
+            align-self: flex-end;
+            cursor: pointer;
         }
 
         .review-card {
-            background: #12141a;
-            padding: 12px 15px;
+            background: var(--card-bg);
+            padding: 10px 12px;
             border-radius: 8px;
+            margin-bottom: 10px;
             border-left: 3px solid var(--accent-color);
+            position: relative;
         }
 
         .review-top {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 6px;
-            font-size: 0.85rem;
+            align-items: center;
+            margin-bottom: 4px;
+            font-size: 0.75rem;
             color: var(--text-secondary);
         }
 
-        /* Admin Modal */
-        .admin-modal-content {
-            max-width: 550px;
-            margin: 60px auto;
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
+        .btn-del-comment {
+            background: none;
+            border: none;
+            color: #ff5555;
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 2px 4px;
+        }
+
+        /* Admin Modal Styling */
+        .admin-body {
+            padding: 16px;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: var(--text-secondary);
+            margin-bottom: 4px;
         }
 
-        .form-group input, .form-group select, .form-group textarea {
+        .form-group input[type="text"], .form-group select, .form-group textarea {
             width: 100%;
             padding: 10px;
-            background: #101117;
+            background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-main);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.9rem;
             outline: none;
         }
 
-        .admin-list {
-            max-height: 200px;
-            overflow-y: auto;
-            margin-top: 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
+        .file-input-wrapper {
+            background: var(--card-bg);
+            border: 1px dashed var(--border-color);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            color: var(--accent-color);
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .file-name-preview {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
         }
 
         .admin-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 12px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .admin-item:last-child {
-            border-bottom: none;
+            padding: 10px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
         }
 
         .btn-delete {
@@ -469,54 +516,56 @@
             border: none;
             padding: 4px 8px;
             border-radius: 4px;
-            cursor: pointer;
-        }
-
-        footer {
-            text-align: center;
-            padding: 1.5rem;
-            border-top: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            margin-top: auto;
+            font-size: 0.75rem;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo-container" onclick="filterCategory('all')">
-            <svg class="logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="100" height="100" rx="20" fill="url(#logo-grad)"/>
-                <path d="M35 30L72 50L35 70V30Z" fill="#FFFFFF"/>
-                <defs>
-                    <linearGradient id="logo-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                        <stop stop-color="#E50914"/>
-                        <stop offset="1" stop-color="#800000"/>
-                    </linearGradient>
-                </defs>
-            </svg>
-            <span class="logo-text">CMVideo</span>
-        </div>
-
-        <nav>
-            <button class="nav-btn active" onclick="filterCategory('all', this)">Все</button>
-            <button class="nav-btn" onclick="filterCategory('movie', this)">Фильмы</button>
-            <button class="nav-btn" onclick="filterCategory('cartoon', this)">Мультфильмы</button>
-            <button class="nav-btn" onclick="filterCategory('popular', this)">Популярное</button>
-            <button class="nav-btn" onclick="filterCategory('new', this)">Новинки</button>
-        </nav>
-
-        <div class="search-admin">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Поиск..." oninput="handleSearch()">
-            </div>
-            <button class="admin-trigger" onclick="openAdminModal()">
-                <i class="fas fa-lock"></i> Админка
+        <div class="header-left">
+            <button class="menu-btn" onclick="toggleDrawer(true)">
+                <i class="fas fa-bars"></i>
             </button>
+            <div class="logo-container" onclick="filterCategory('all')">
+                <svg class="logo-svg" viewBox="0 0 100 100" fill="none">
+                    <rect width="100" height="100" rx="20" fill="url(#grad)"/>
+                    <path d="M35 30L72 50L35 70V30Z" fill="#FFF"/>
+                    <defs>
+                        <linearGradient id="grad" x1="0" y1="0" x2="100" y2="100">
+                            <stop stop-color="#E50914"/>
+                            <stop offset="1" stop-color="#800000"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span class="logo-text">CMVideo</span>
+            </div>
         </div>
     </header>
+
+    <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Поиск мультфильмов и фильмов..." oninput="handleSearch()">
+    </div>
+
+    <!-- Side Navigation Drawer -->
+    <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer(false)"></div>
+    <div class="side-drawer" id="sideDrawer">
+        <div class="drawer-header">
+            <span style="font-weight: bold; font-size: 1.1rem;">Навигация</span>
+            <i class="fas fa-times" style="cursor: pointer;" onclick="toggleDrawer(false)"></i>
+        </div>
+        <div class="drawer-menu">
+            <button class="drawer-item active" onclick="selectCategory('all', this)"><i class="fas fa-film"></i> Все</button>
+            <button class="drawer-item" onclick="selectCategory('movie', this)"><i class="fas fa-video"></i> Фильмы</button>
+            <button class="drawer-item" onclick="selectCategory('cartoon', this)"><i class="fas fa-child"></i> Мультфильмы</button>
+            <button class="drawer-item" onclick="selectCategory('popular', this)"><i class="fas fa-fire"></i> Популярное</button>
+            <button class="drawer-item" onclick="selectCategory('new', this)"><i class="fas fa-star"></i> Новинки</button>
+        </div>
+        <button class="admin-drawer-btn" onclick="toggleDrawer(false); openAdminModal();">
+            <i class="fas fa-user-shield"></i> Админ-Панель
+        </button>
+    </div>
 
     <main>
         <h2 class="section-title" id="sectionTitle">Все видео</h2>
@@ -526,32 +575,35 @@
     <!-- Player Modal -->
     <div class="modal" id="playerModal">
         <div class="modal-content">
-            <span class="close-modal" onclick="closePlayer()">&times;</span>
-            <div class="player-wrapper">
-                <video id="mainPlayer" controls></video>
+            <div class="modal-header">
+                <span id="modalHeaderTitle" style="font-weight: bold; font-size: 0.95rem;">Просмотр</span>
+                <i class="fas fa-times" style="font-size: 1.3rem; cursor: pointer;" onclick="closePlayer()"></i>
             </div>
-            <div class="player-controls-bar">
-                <div>
-                    <label style="font-size: 0.85rem; color: #aaa;">Скорость: </label>
-                    <select id="speedSelect" onchange="changeSpeed(this.value)">
-                        <option value="0.5">0.5x</option>
-                        <option value="0.75">0.75x</option>
-                        <option value="1" selected>1.0x (Норм)</option>
-                        <option value="1.25">1.25x</option>
-                        <option value="1.5">1.5x</option>
-                        <option value="2">2.0x</option>
-                    </select>
-                </div>
-                <div>
-                    <label style="font-size: 0.85rem; color: #aaa;">Качество: </label>
-                    <select id="qualitySelect" onchange="changeQuality(this.value)">
-                        <option value="auto" selected>Авто</option>
-                        <option value="1080">1080p Full HD</option>
-                        <option value="720">720p HD</option>
-                        <option value="480">480p SD</option>
-                    </select>
+            <div class="video-container">
+                <video id="mainPlayer" controls playsinline></video>
+                <div class="player-controls-bar">
+                    <div>
+                        <label>Скорость: </label>
+                        <select id="speedSelect" onchange="changeSpeed(this.value)">
+                            <option value="0.5">0.5x</option>
+                            <option value="1" selected>1.0x</option>
+                            <option value="1.25">1.25x</option>
+                            <option value="1.5">1.5x</option>
+                            <option value="2">2.0x</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Качество: </label>
+                        <select onchange="alert('Переключено качество на ' + this.value)">
+                            <option value="Auto">Auto</option>
+                            <option value="1080p">1080p</option>
+                            <option value="720p">720p</option>
+                            <option value="480p">480p</option>
+                        </select>
+                    </div>
                 </div>
             </div>
+
             <div class="details-container">
                 <h1 class="details-title" id="modalTitle"></h1>
                 <div class="details-meta">
@@ -562,19 +614,19 @@
                 <p class="details-desc" id="modalDesc"></p>
 
                 <div class="reviews-section">
-                    <h3 class="reviews-header">Отзывы зрителей</h3>
+                    <h3 style="font-size: 1rem; margin-bottom: 12px;">Отзывы</h3>
                     <div class="add-review-form">
                         <div class="star-rating" id="starRating">
-                            <i class="fas fa-star" data-val="1" onclick="setRating(1)"></i>
-                            <i class="fas fa-star" data-val="2" onclick="setRating(2)"></i>
-                            <i class="fas fa-star" data-val="3" onclick="setRating(3)"></i>
-                            <i class="fas fa-star" data-val="4" onclick="setRating(4)"></i>
-                            <i class="fas fa-star" data-val="5" onclick="setRating(5)"></i>
+                            <i class="fas fa-star active" onclick="setRating(1)"></i>
+                            <i class="fas fa-star active" onclick="setRating(2)"></i>
+                            <i class="fas fa-star active" onclick="setRating(3)"></i>
+                            <i class="fas fa-star active" onclick="setRating(4)"></i>
+                            <i class="fas fa-star active" onclick="setRating(5)"></i>
                         </div>
-                        <textarea id="reviewText" placeholder="Оставьте ваш отзыв о фильме..."></textarea>
+                        <textarea id="reviewText" placeholder="Напишите ваш отзыв..."></textarea>
                         <button class="btn-submit" onclick="submitReview()">Отправить</button>
                     </div>
-                    <div class="reviews-list" id="reviewsList"></div>
+                    <div id="reviewsList"></div>
                 </div>
             </div>
         </div>
@@ -582,104 +634,140 @@
 
     <!-- Admin Modal -->
     <div class="modal" id="adminModal">
-        <div class="admin-modal-content">
-            <span class="close-modal" onclick="closeAdmin()">&times;</span>
-            <div id="adminAuth">
-                <h3 style="margin-bottom: 15px;">Вход в Админ-панель</h3>
-                <div class="form-group">
-                    <label>Введите секретный код доступа:</label>
-                    <input type="password" id="adminCodeInput" placeholder="Код...">
-                </div>
-                <button class="btn-submit" style="width:100%" onclick="verifyAdmin()">Войти</button>
+        <div class="modal-content">
+            <div class="modal-header">
+                <span style="font-weight: bold;">Админ-панель</span>
+                <i class="fas fa-times" style="font-size: 1.3rem; cursor: pointer;" onclick="closeAdmin()"></i>
             </div>
-            <div id="adminPanel" style="display: none;">
-                <h3 style="margin-bottom: 15px;">Добавление контента</h3>
-                <div class="form-group">
-                    <label>Название</label>
-                    <input type="text" id="addTitle" placeholder="Пример: Наруто / Интерстеллар">
+            <div class="admin-body">
+                <div id="adminAuth">
+                    <div class="form-group">
+                        <label>Введите код доступа:</label>
+                        <input type="password" id="adminCodeInput" placeholder="Код (2452_1726)">
+                    </div>
+                    <button class="btn-submit" style="width: 100%; margin-top: 10px;" onclick="verifyAdmin()">Войти</button>
                 </div>
-                <div class="form-group">
-                    <label>Тип</label>
-                    <select id="addType">
-                        <option value="movie">Фильм</option>
-                        <option value="cartoon">Мультфильм</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Ссылка на видео (MP4 / WebM)</label>
-                    <input type="text" id="addVideoUrl" placeholder="https://domain.com/video.mp4">
-                </div>
-                <div class="form-group">
-                    <label>Ссылка на обложку (600x900 .jpg/.png)</label>
-                    <input type="text" id="addPosterUrl" placeholder="https://domain.com/poster.jpg">
-                </div>
-                <div class="form-group">
-                    <label>Описание</label>
-                    <textarea id="addDesc" rows="3" placeholder="Краткое описание..."></textarea>
-                </div>
-                <button class="btn-submit" style="width:100%" onclick="addMediaItem()">Добавить в каталог</button>
 
-                <h4 style="margin-top: 20px; margin-bottom: 10px;">Управление текущими медиа:</h4>
-                <div class="admin-list" id="adminMediaList"></div>
+                <div id="adminPanel" style="display: none;">
+                    <h4 style="margin-bottom: 12px;">Добавить контент</h4>
+                    <div class="form-group">
+                        <label>Название</label>
+                        <input type="text" id="addTitle" placeholder="Пример: Наруто">
+                    </div>
+                    <div class="form-group">
+                        <label>Тип</label>
+                        <select id="addType">
+                            <option value="cartoon">Мультфильм</option>
+                            <option value="movie">Фильм</option>
+                        </select>
+                    </div>
+
+                    <!-- File Upload Cover 1:1 -->
+                    <div class="form-group">
+                        <label>Обложка (Формат 1:1 квадрат)</label>
+                        <div class="file-input-wrapper">
+                            <label class="file-label" for="coverFileInput"><i class="fas fa-upload"></i> Выбрать фото с телефона</label>
+                            <input type="file" id="coverFileInput" accept="image/*" onchange="handleFileSelect(this, 'cover')">
+                            <div class="file-name-preview" id="coverFileName">Файл не выбран</div>
+                        </div>
+                    </div>
+
+                    <!-- File Upload Video -->
+                    <div class="form-group">
+                        <label>Видео файл</label>
+                        <div class="file-input-wrapper">
+                            <label class="file-label" for="videoFileInput"><i class="fas fa-file-video"></i> Выбрать видео с телефона</label>
+                            <input type="file" id="videoFileInput" accept="video/*" onchange="handleFileSelect(this, 'video')">
+                            <div class="file-name-preview" id="videoFileName">Файл не выбран</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Описание</label>
+                        <textarea id="addDesc" placeholder="Краткое описание..."></textarea>
+                    </div>
+
+                    <button class="btn-submit" style="width: 100%; margin-top: 10px;" onclick="addMediaItem()">Загрузить на сайт</button>
+
+                    <h4 style="margin-top: 25px; margin-bottom: 10px;">Список видео:</h4>
+                    <div id="adminMediaList"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <footer>
-        &copy; 2026 CMVideo — Современная стриминговая платформа.
-    </footer>
-
     <script>
-        // Initial Demo Data
-        const initialData = [
+        // Sample Base64 / Working Video Data
+        const defaultData = [
             {
                 id: 1,
-                title: "Большой Заяц: Праздник",
+                title: "Большой Заяц",
                 type: "cartoon",
                 videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                posterUrl: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop",
-                desc: "Увлекательные приключения лесных жителей и большого зайца на поляне.",
+                posterUrl: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=500&auto=format&fit=crop",
+                desc: "Увлекательные приключения лесного зайца и его друзей.",
                 isNew: true,
-                views: 1450,
+                views: 1200,
                 reviews: [
-                    { rating: 5, text: "Отличный мультик для всей семьи!", date: "01.11.2026" },
-                    { rating: 4, text: "Красивая графика и добрый сюжет.", date: "05.11.2026" }
+                    { id: 101, rating: 5, text: "Классный мультик!", date: "01.11.2026" }
                 ]
             },
             {
                 id: 2,
-                title: "Синтетический Город 2077",
+                title: "Синтетика 2077",
                 type: "movie",
                 videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                posterUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop",
-                desc: "Фантастический триллер о будущем человечества и робототехнике.",
+                posterUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500&auto=format&fit=crop",
+                desc: "Фантастическая история о мире кибернетики и будущего.",
                 isNew: false,
-                views: 3200,
-                reviews: [
-                    { rating: 5, text: "Шедевр кинематографа!", date: "02.10.2026" }
-                ]
-            },
-            {
-                id: 3,
-                title: "Стальной Следопыт",
-                type: "movie",
-                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-                posterUrl: "https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?w=600&auto=format&fit=crop",
-                desc: "Группа защитников пытается восстановить порядок в разрушенном футуристическом Амстердаме.",
-                isNew: true,
-                views: 5100,
-                reviews: [
-                    { rating: 4, text: "Спецэффекты на высоте!", date: "08.11.2026" }
-                ]
+                views: 2800,
+                reviews: []
             }
         ];
 
-        let mediaData = JSON.parse(localStorage.getItem('cmvideo_data')) || initialData;
-        let currentActiveItem = null;
-        let currentRatingInput = 5;
+        let mediaData = JSON.parse(localStorage.getItem('cmvideo_mobile_db')) || defaultData;
+        let currentItem = null;
+        let selectedRating = 5;
+
+        // Temporary Base64 Data holders for File Inputs
+        let tempCoverBase64 = '';
+        let tempVideoBase64 = '';
 
         function saveData() {
-            localStorage.setItem('cmvideo_data', JSON.stringify(mediaData));
+            try {
+                localStorage.setItem('cmvideo_mobile_db', JSON.stringify(mediaData));
+            } catch(e) {
+                alert('Память LocalStorage переполнена! Рекомендуется использовать видео поменьше.');
+            }
+        }
+
+        /* Drawer functionality */
+        function toggleDrawer(open) {
+            const drawer = document.getElementById('sideDrawer');
+            const overlay = document.getElementById('drawerOverlay');
+            if (open) {
+                drawer.classList.add('open');
+                overlay.style.display = 'block';
+            } else {
+                drawer.classList.remove('open');
+                overlay.style.display = 'none';
+            }
+        }
+
+        function selectCategory(cat, btn) {
+            document.querySelectorAll('.drawer-item').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            toggleDrawer(false);
+
+            const titles = {
+                all: 'Все видео',
+                movie: 'Фильмы',
+                cartoon: 'Мультфильмы',
+                popular: 'Популярное',
+                new: 'Новинки'
+            };
+            document.getElementById('sectionTitle').innerText = titles[cat] || 'Все видео';
+            renderGrid(cat, document.getElementById('searchInput').value);
         }
 
         function calculateAvgRating(reviews) {
@@ -688,16 +776,13 @@
             return (sum / reviews.length).toFixed(1);
         }
 
-        function renderGrid(filter = 'all', searchQuery = '') {
+        function renderGrid(filter = 'all', search = '') {
             const grid = document.getElementById('mediaGrid');
             grid.innerHTML = '';
 
-            let filtered = mediaData.filter(item => {
-                const matchSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                    item.desc.toLowerCase().includes(searchQuery.toLowerCase());
-                
-                if (!matchSearch) return false;
-
+            let list = mediaData.filter(item => {
+                const matchesSearch = item.title.toLowerCase().includes(search.toLowerCase());
+                if (!matchesSearch) return false;
                 if (filter === 'all') return true;
                 if (filter === 'movie') return item.type === 'movie';
                 if (filter === 'cartoon') return item.type === 'cartoon';
@@ -706,19 +791,19 @@
                 return true;
             });
 
-            if (filtered.length === 0) {
-                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #888; padding: 40px 0;">Ничего не найдено</p>';
+            if (list.length === 0) {
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #777; padding: 30px;">Ничего не найдено</p>';
                 return;
             }
 
-            filtered.forEach(item => {
+            list.forEach(item => {
                 const avg = calculateAvgRating(item.reviews);
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.onclick = () => openPlayer(item.id);
                 card.innerHTML = `
                     <div class="card-img-wrap">
-                        <img class="card-img" src="${item.posterUrl}" alt="${item.title}" onerror="this.src='https://via.placeholder.com/600x900?text=No+Cover'">
+                        <img class="card-img" src="${item.posterUrl}" onerror="this.src='https://via.placeholder.com/500?text=Обложка'">
                         <span class="card-type">${item.type === 'movie' ? 'Фильм' : 'Мульт'}</span>
                         <span class="card-badge"><i class="fas fa-star"></i> ${avg > 0 ? avg : 'Новый'}</span>
                     </div>
@@ -731,43 +816,26 @@
             });
         }
 
-        function filterCategory(cat, btn = null) {
-            if (btn) {
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            }
-            
-            const titles = {
-                all: 'Все видео',
-                movie: 'Фильмы',
-                cartoon: 'Мультфильмы',
-                popular: 'Популярное',
-                new: 'Новинки'
-            };
-            document.getElementById('sectionTitle').innerText = titles[cat] || 'Каталог';
-            renderGrid(cat, document.getElementById('searchInput').value);
-        }
-
         function handleSearch() {
-            const query = document.getElementById('searchInput').value;
-            renderGrid('all', query);
+            renderGrid('all', document.getElementById('searchInput').value);
         }
 
-        /* Player Functions */
+        /* Player logic */
         function openPlayer(id) {
-            currentActiveItem = mediaData.find(m => m.id === id);
-            if (!currentActiveItem) return;
+            currentItem = mediaData.find(m => m.id === id);
+            if (!currentItem) return;
 
-            currentActiveItem.views += 1;
+            currentItem.views += 1;
             saveData();
 
             const player = document.getElementById('mainPlayer');
-            player.src = currentActiveItem.videoUrl;
-            document.getElementById('modalTitle').innerText = currentActiveItem.title;
-            document.getElementById('modalCategory').innerText = currentActiveItem.type === 'movie' ? 'Фильм' : 'Мультфильм';
-            document.getElementById('modalDesc').innerText = currentActiveItem.desc;
-            
-            updateModalRating();
+            player.src = currentItem.videoUrl;
+            document.getElementById('modalHeaderTitle').innerText = currentItem.title;
+            document.getElementById('modalTitle').innerText = currentItem.title;
+            document.getElementById('modalCategory').innerText = currentItem.type === 'movie' ? 'Фильм' : 'Мультфильм';
+            document.getElementById('modalDesc').innerText = currentItem.desc;
+
+            updateRatingDisplay();
             renderReviews();
             setRating(5);
 
@@ -786,81 +854,78 @@
             document.getElementById('mainPlayer').playbackRate = parseFloat(val);
         }
 
-        function changeQuality(val) {
-            alert(`Переключено качество на: ${val === 'auto' ? 'Автоматическое' : val + 'p'}`);
-        }
-
-        /* Reviews Functions */
+        /* Comments / Reviews & Deletion */
         function setRating(val) {
-            currentRatingInput = val;
+            selectedRating = val;
             const stars = document.querySelectorAll('#starRating i');
             stars.forEach((s, idx) => {
-                if (idx < val) {
-                    s.classList.add('active');
-                } else {
-                    s.classList.remove('active');
-                }
+                s.className = idx < val ? 'fas fa-star active' : 'fas fa-star';
             });
         }
 
-        function updateModalRating() {
-            const avg = calculateAvgRating(currentActiveItem.reviews);
-            document.getElementById('modalRating').innerHTML = `<i class="fas fa-star"></i> ${avg > 0 ? avg : '0.0'} (${currentActiveItem.reviews ? currentActiveItem.reviews.length : 0})`;
+        function updateRatingDisplay() {
+            const avg = calculateAvgRating(currentItem.reviews);
+            document.getElementById('modalRating').innerHTML = `<i class="fas fa-star"></i> ${avg > 0 ? avg : '0.0'} (${currentItem.reviews ? currentItem.reviews.length : 0})`;
         }
 
         function submitReview() {
             const text = document.getElementById('reviewText').value.trim();
-            if (!text) {
-                alert('Пожалуйста, напишите текст отзыва.');
-                return;
-            }
+            if (!text) return alert('Введите текст комментария.');
 
-            if (!currentActiveItem.reviews) currentActiveItem.reviews = [];
-            
-            const newRev = {
-                rating: currentRatingInput,
+            if (!currentItem.reviews) currentItem.reviews = [];
+            currentItem.reviews.unshift({
+                id: Date.now(),
+                rating: selectedRating,
                 text: text,
                 date: new Date().toLocaleDateString('ru-RU')
-            };
+            });
 
-            currentActiveItem.reviews.unshift(newRev);
             saveData();
-            
             document.getElementById('reviewText').value = '';
             renderReviews();
-            updateModalRating();
+            updateRatingDisplay();
             renderGrid();
+        }
+
+        function deleteComment(commId) {
+            if (confirm('Удалить этот комментарий?')) {
+                currentItem.reviews = currentItem.reviews.filter(c => c.id !== commId);
+                saveData();
+                renderReviews();
+                updateRatingDisplay();
+                renderGrid();
+            }
         }
 
         function renderReviews() {
             const container = document.getElementById('reviewsList');
             container.innerHTML = '';
 
-            if (!currentActiveItem.reviews || currentActiveItem.reviews.length === 0) {
-                container.innerHTML = '<p style="color: #777; font-size: 0.85rem;">Пока нет отзывов. Будьте первым!</p>';
+            if (!currentItem.reviews || currentItem.reviews.length === 0) {
+                container.innerHTML = '<p style="color: #666; font-size: 0.8rem;">Пока нет отзывов.</p>';
                 return;
             }
 
-            currentActiveItem.reviews.forEach(r => {
-                const item = document.createElement('div');
-                item.className = 'review-card';
-                let starsHtml = '';
+            currentItem.reviews.forEach(r => {
+                const el = document.createElement('div');
+                el.className = 'review-card';
+                let stars = '';
                 for (let i = 1; i <= 5; i++) {
-                    starsHtml += `<i class="fas fa-star" style="color: ${i <= r.rating ? 'var(--star-gold)' : '#444'}"></i>`;
+                    stars += `<i class="fas fa-star" style="color: ${i <= r.rating ? 'var(--star-gold)' : '#444'}"></i>`;
                 }
 
-                item.innerHTML = `
+                el.innerHTML = `
                     <div class="review-top">
-                        <span>${starsHtml}</span>
-                        <span>${r.date}</span>
+                        <span>${stars} • ${r.date}</span>
+                        <button class="btn-del-comment" onclick="deleteComment(${r.id})"><i class="fas fa-trash"></i> Удалить</button>
                     </div>
-                    <div style="font-size: 0.9rem;">${r.text}</div>
+                    <div style="font-size: 0.85rem;">${r.text}</div>
                 `;
-                container.appendChild(item);
+                container.appendChild(el);
             });
         }
 
-        /* Admin Panel Functions */
+        /* Admin & File Handlers */
         function openAdminModal() {
             document.getElementById('adminModal').style.display = 'block';
         }
@@ -870,8 +935,8 @@
         }
 
         function verifyAdmin() {
-            const code = document.getElementById('adminCodeInput').value;
-            if (code === '2452_1726') {
+            const input = document.getElementById('adminCodeInput').value;
+            if (input === '2452_1726') {
                 document.getElementById('adminAuth').style.display = 'none';
                 document.getElementById('adminPanel').style.display = 'block';
                 renderAdminMediaList();
@@ -880,24 +945,39 @@
             }
         }
 
+        function handleFileSelect(input, type) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (type === 'cover') {
+                    tempCoverBase64 = e.target.result;
+                    document.getElementById('coverFileName').innerText = file.name;
+                } else if (type === 'video') {
+                    tempVideoBase64 = e.target.result;
+                    document.getElementById('videoFileName').innerText = file.name;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
         function addMediaItem() {
             const title = document.getElementById('addTitle').value.trim();
             const type = document.getElementById('addType').value;
-            const videoUrl = document.getElementById('addVideoUrl').value.trim();
-            const posterUrl = document.getElementById('addPosterUrl').value.trim();
             const desc = document.getElementById('addDesc').value.trim();
 
-            if (!title || !videoUrl || !posterUrl) {
-                alert('Заполните все обязательные поля (Название, Ссылка на видео, Обложка)!');
+            if (!title || !tempCoverBase64 || !tempVideoBase64) {
+                alert('Пожалуйста, введите название, выберите фото обложки и файл видео с телефона!');
                 return;
             }
 
             const newItem = {
                 id: Date.now(),
-                title,
-                type,
-                videoUrl,
-                posterUrl,
+                title: title,
+                type: type,
+                posterUrl: tempCoverBase64,
+                videoUrl: tempVideoBase64,
                 desc: desc || 'Без описания.',
                 isNew: true,
                 views: 0,
@@ -911,14 +991,17 @@
 
             // Clear inputs
             document.getElementById('addTitle').value = '';
-            document.getElementById('addVideoUrl').value = '';
-            document.getElementById('addPosterUrl').value = '';
             document.getElementById('addDesc').value = '';
-            alert('Медиа успешно добавлено в каталог!');
+            document.getElementById('coverFileName').innerText = 'Файл не выбран';
+            document.getElementById('videoFileName').innerText = 'Файл не выбран';
+            tempCoverBase64 = '';
+            tempVideoBase64 = '';
+
+            alert('Медиафайл успешно загружен и добавлен!');
         }
 
         function deleteMediaItem(id) {
-            if (confirm('Вы уверены, что хотите удалить этот элемент?')) {
+            if (confirm('Удалить этот фильм/мультфильм из каталога?')) {
                 mediaData = mediaData.filter(m => m.id !== id);
                 saveData();
                 renderGrid();
@@ -927,16 +1010,16 @@
         }
 
         function renderAdminMediaList() {
-            const list = document.getElementById('adminMediaList');
-            list.innerHTML = '';
-            mediaData.forEach(item => {
+            const container = document.getElementById('adminMediaList');
+            container.innerHTML = '';
+            mediaData.forEach(m => {
                 const el = document.createElement('div');
                 el.className = 'admin-item';
                 el.innerHTML = `
-                    <span><strong>${item.title}</strong> (${item.type === 'movie' ? 'Фильм' : 'Мульт'})</span>
-                    <button class="btn-delete" onclick="deleteMediaItem(${item.id})">Удалить</button>
+                    <span><strong>${m.title}</strong> (${m.type === 'movie' ? 'Фильм' : 'Мульт'})</span>
+                    <button class="btn-delete" onclick="deleteMediaItem(${m.id})">Удалить</button>
                 `;
-                list.appendChild(el);
+                container.appendChild(el);
             });
         }
 
