@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CMVideo — Ultimate Edition</title>
+    <title>CMVideo — Local Upload Edition</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -323,17 +323,12 @@
             justify-content: center;
         }
 
-        video, .iframe-wrapper {
+        video {
             width: 100%;
             height: 240px;
             display: block;
             border: none;
-        }
-
-        .iframe-wrapper iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
+            background: #000;
         }
 
         .player-controls-bar {
@@ -613,7 +608,7 @@
                 <i class="fas fa-times" style="font-size: 1.3rem; cursor: pointer;" onclick="closePlayer()"></i>
             </div>
             <div class="video-container" id="playerContainer">
-                <!-- Dynamic Player: Video or IFrame -->
+                <video id="mainPlayer" controls playsinline></video>
             </div>
             <div class="player-controls-bar" id="controlsBar">
                 <div>
@@ -628,11 +623,10 @@
                 </div>
                 <div>
                     <label>Качество: </label>
-                    <select onchange="alert('Переключено качество на ' + this.value)">
+                    <select onchange="alert('Качество подстроено под ваш экран.')">
                         <option value="Auto">Auto</option>
                         <option value="1080p">1080p</option>
                         <option value="720p">720p</option>
-                        <option value="480p">480p</option>
                     </select>
                 </div>
             </div>
@@ -697,12 +691,11 @@
                         </select>
                     </div>
 
-                    <!-- Video Source: supports direct link, iframe embed code OR file upload from phone -->
+                    <!-- Video Upload Only from Phone -->
                     <div class="form-group">
-                        <label>Источник видео (Прямая ссылка, IFrame код ИЛИ файл с телефона)</label>
-                        <input type="text" id="addVideoUrl" placeholder="https://...mp4 ИЛИ тег iframe">
-                        <div style="margin-top: 6px;" class="file-input-wrapper">
-                            <label class="file-label" for="videoFileHidden"><i class="fas fa-file-video"></i> Или загрузить видеофайл с телефона</label>
+                        <label>Видеозапись (Загрузить видеофайл с телефона)</label>
+                        <div class="file-input-wrapper">
+                            <label class="file-label" for="videoFileHidden"><i class="fas fa-file-video"></i> Выбрать видео с телефона</label>
                             <input type="file" id="videoFileHidden" accept="video/*" onchange="handleVideoFileSelect(this)">
                             <div class="file-name-preview" id="videoFileName">Видеофайл не выбран</div>
                         </div>
@@ -735,46 +728,99 @@
         </div>
     </div>
 
+    <!-- IndexedDB Video Storage Script for Large Files -->
+    <script>
+        const DB_NAME = 'CMVideo_DB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'videos';
+        let db = null;
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const database = e.target.result;
+                    if (!database.objectStoreNames.contains(STORE_NAME)) {
+                        database.createObjectStore(STORE_NAME);
+                    }
+                };
+                request.onsuccess = (e) => {
+                    db = e.target.result;
+                    resolve(db);
+                };
+                request.onerror = (e) => reject(e);
+            });
+        }
+
+        function saveVideoBlob(id, blob) {
+            return new Promise((resolve, reject) => {
+                if (!db) return reject('DB not ready');
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                store.put(blob, id);
+                tx.oncomplete = () => resolve();
+                tx.onerror = (e) => reject(e);
+            });
+        }
+
+        function getVideoBlob(id) {
+            return new Promise((resolve, reject) => {
+                if (!db) return reject('DB not ready');
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.get(id);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = (e) => reject(e);
+            });
+        }
+
+        function deleteVideoBlob(id) {
+            return new Promise((resolve) => {
+                if (!db) return resolve();
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                store.delete(id);
+                tx.oncomplete = () => resolve();
+            });
+        }
+    </script>
+
+    <!-- Main Logic Script -->
     <script>
         const defaultData = [
             {
                 id: 1,
-                title: "Большой Заяц",
+                title: "Демо Мультфильм",
                 type: "cartoon",
-                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
                 posterUrl: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=500&auto=format&fit=crop",
-                desc: "Увлекательные приключения лесного зайца и его друзей.",
+                desc: "Тестовый ролик из галереи.",
                 isNew: true,
-                views: 1200,
+                views: 100,
                 reviews: [
-                    { id: 101, rating: 5, text: "Классный мультик!", date: "01.11.2026" }
+                    { id: 101, rating: 5, text: "Всё отлично воспроизводится!", date: "01.11.2026" }
                 ]
-            },
-            {
-                id: 2,
-                title: "Синтетика 2077",
-                type: "movie",
-                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                posterUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500&auto=format&fit=crop",
-                desc: "Фантастическая история о мире кибернетики и будущего.",
-                isNew: false,
-                views: 2800,
-                reviews: []
             }
         ];
 
-        let mediaData = JSON.parse(localStorage.getItem('cmvideo_ultimate_db')) || defaultData;
+        let mediaData = JSON.parse(localStorage.getItem('cmvideo_upload_meta')) || defaultData;
         let currentItem = null;
         let selectedRating = 5;
         let tempCoverBase64 = '';
-        let tempVideoBase64 = '';
+        let selectedVideoFile = null;
+        let activeBlobUrl = null;
         let isAdminLoggedIn = false;
+
+        initDB().then(() => {
+            renderGrid();
+        }).catch(() => {
+            renderGrid();
+        });
 
         function saveData() {
             try {
-                localStorage.setItem('cmvideo_ultimate_db', JSON.stringify(mediaData));
+                localStorage.setItem('cmvideo_upload_meta', JSON.stringify(mediaData));
             } catch(e) {
-                alert('Память устройства переполнена! Видеофайл слишком большой для LocalStorage.');
+                alert('Ошибка сохранения параметров.');
             }
         }
 
@@ -823,7 +869,7 @@
                 if (filter === 'movie') return item.type === 'movie';
                 if (filter === 'cartoon') return item.type === 'cartoon';
                 if (filter === 'new') return item.isNew;
-                if (filter === 'popular') return item.views > 2000;
+                if (filter === 'popular') return item.views > 50;
                 return true;
             });
 
@@ -856,31 +902,31 @@
             renderGrid('all', document.getElementById('searchInput').value);
         }
 
-        /* Player */
-        function openPlayer(id) {
+        /* Direct Player Engine for Phone Uploads */
+        async function openPlayer(id) {
             currentItem = mediaData.find(m => m.id === id);
             if (!currentItem) return;
 
             currentItem.views += 1;
             saveData();
 
-            const container = document.getElementById('playerContainer');
-            const controlsBar = document.getElementById('controlsBar');
+            const player = document.getElementById('mainPlayer');
             
-            const isIframe = currentItem.videoUrl.trim().toLowerCase().startsWith('<iframe') || currentItem.videoUrl.includes('vewo.io') || currentItem.videoUrl.includes('embed');
+            if (activeBlobUrl) {
+                URL.revokeObjectURL(activeBlobUrl);
+                activeBlobUrl = null;
+            }
 
-            if (isIframe) {
-                controlsBar.style.display = 'none';
-                let iframeCode = currentItem.videoUrl;
-                if (!iframeCode.toLowerCase().startsWith('<iframe')) {
-                    iframeCode = `<iframe src="${currentItem.videoUrl}" allowfullscreen></iframe>`;
+            try {
+                const blob = await getVideoBlob(currentItem.id);
+                if (blob) {
+                    activeBlobUrl = URL.createObjectURL(blob);
+                    player.src = activeBlobUrl;
+                } else {
+                    player.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
                 }
-                container.innerHTML = `<div class="iframe-wrapper">${iframeCode}</div>`;
-            } else {
-                controlsBar.style.display = 'flex';
-                container.innerHTML = `<video id="mainPlayer" controls playsinline src="${currentItem.videoUrl}"></video>`;
-                const player = document.getElementById('mainPlayer');
-                player.play().catch(() => {});
+            } catch(e) {
+                player.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
             }
 
             document.getElementById('modalHeaderTitle').innerText = currentItem.title;
@@ -893,15 +939,17 @@
             setRating(5);
 
             document.getElementById('playerModal').style.display = 'block';
+            player.play().catch(() => {});
         }
 
         function closePlayer() {
             const player = document.getElementById('mainPlayer');
-            if (player) {
-                player.pause();
-                player.src = '';
+            player.pause();
+            player.src = '';
+            if (activeBlobUrl) {
+                URL.revokeObjectURL(activeBlobUrl);
+                activeBlobUrl = null;
             }
-            document.getElementById('playerContainer').innerHTML = '';
             document.getElementById('playerModal').style.display = 'none';
         }
 
@@ -985,7 +1033,7 @@
             });
         }
 
-        /* Admin, Upload & Editing */
+        /* Admin, File Selection & Direct Phone Processing */
         function openAdminModal() {
             document.getElementById('adminModal').style.display = 'block';
         }
@@ -1022,30 +1070,35 @@
         function handleVideoFileSelect(input) {
             const file = input.files[0];
             if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                tempVideoBase64 = e.target.result;
-                document.getElementById('videoFileName').innerText = file.name;
-                document.getElementById('addVideoUrl').value = '[Загружено с телефона]';
-            };
-            reader.readAsDataURL(file);
+            selectedVideoFile = file;
+            document.getElementById('videoFileName').innerText = file.name;
         }
 
-        function addOrUpdateMediaItem() {
+        async function addOrUpdateMediaItem() {
             const editId = document.getElementById('editMediaId').value;
             const title = document.getElementById('addTitle').value.trim();
             const type = document.getElementById('addType').value;
-            let videoUrl = document.getElementById('addVideoUrl').value.trim();
             const desc = document.getElementById('addDesc').value.trim();
 
-            if (tempVideoBase64) {
-                videoUrl = tempVideoBase64;
+            if (!title) {
+                alert('Пожалуйста, введите название!');
+                return;
             }
 
-            if (!title || !videoUrl) {
-                alert('Пожалуйста, введите название и укажите ссылку на видео, IFrame код или выберите файл с телефона!');
+            if (!editId && !selectedVideoFile) {
+                alert('Пожалуйста, выберите видеофайл с телефона!');
                 return;
+            }
+
+            let itemId = editId ? parseInt(editId) : Date.now();
+
+            if (selectedVideoFile) {
+                try {
+                    await saveVideoBlob(itemId, selectedVideoFile);
+                } catch(e) {
+                    alert('Не удалось сохранить видеофайл на устройстве.');
+                    return;
+                }
             }
 
             if (editId) {
@@ -1053,9 +1106,6 @@
                 if (targetIndex !== -1) {
                     mediaData[targetIndex].title = title;
                     mediaData[targetIndex].type = type;
-                    if (videoUrl !== '[Загружено с телефона]') {
-                        mediaData[targetIndex].videoUrl = videoUrl;
-                    }
                     mediaData[targetIndex].desc = desc || 'Без описания.';
                     if (tempCoverBase64) {
                         mediaData[targetIndex].posterUrl = tempCoverBase64;
@@ -1064,10 +1114,9 @@
                 alert('Элемент успешно обновлен!');
             } else {
                 const newItem = {
-                    id: Date.now(),
+                    id: itemId,
                     title: title,
                     type: type,
-                    videoUrl: videoUrl,
                     posterUrl: tempCoverBase64 || 'https://via.placeholder.com/500?text=Обложка',
                     desc: desc || 'Без описания.',
                     isNew: true,
@@ -1075,7 +1124,7 @@
                     reviews: []
                 };
                 mediaData.unshift(newItem);
-                alert('Медиафайл успешно добавлен!');
+                alert('Видео с телефона успешно добавлено в каталог!');
             }
 
             saveData();
@@ -1091,35 +1140,35 @@
             document.getElementById('editMediaId').value = item.id;
             document.getElementById('addTitle').value = item.title;
             document.getElementById('addType').value = item.type;
-            document.getElementById('addVideoUrl').value = item.videoUrl.startsWith('data:') ? '[Видео с телефона]' : item.videoUrl;
             document.getElementById('addDesc').value = item.desc;
             
             document.getElementById('adminFormHeader').innerText = 'Редактировать контент';
             document.getElementById('btnSaveMedia').innerText = 'Сохранить изменения';
             document.getElementById('btnCancelEdit').style.display = 'block';
-            document.getElementById('coverFileName').innerText = 'Оставьте пустым, чтобы не менять обложку';
-            document.getElementById('videoFileName').innerText = 'Видеофайл не выбран (останется прежним)';
-            tempVideoBase64 = '';
+            document.getElementById('coverFileName').innerText = 'Оставьте пустым, чтобы не менять обложка';
+            document.getElementById('videoFileName').innerText = 'Выберите новый файл или оставьте прежний';
+            selectedVideoFile = null;
+            tempCoverBase64 = '';
         }
 
         function resetAdminForm() {
             document.getElementById('editMediaId').value = '';
             document.getElementById('addTitle').value = '';
-            document.getElementById('addVideoUrl').value = '';
             document.getElementById('addDesc').value = '';
             document.getElementById('coverFileName').innerText = 'Файл не выбран (или останется прежним)';
             document.getElementById('videoFileName').innerText = 'Видеофайл не выбран';
             tempCoverBase64 = '';
-            tempVideoBase64 = '';
+            selectedVideoFile = null;
 
             document.getElementById('adminFormHeader').innerText = 'Добавить контент';
             document.getElementById('btnSaveMedia').innerText = 'Добавить в каталог';
             document.getElementById('btnCancelEdit').style.display = 'none';
         }
 
-        function deleteMediaItem(id) {
+        async function deleteMediaItem(id) {
             if (confirm('Удалить этот элемент из каталога?')) {
                 mediaData = mediaData.filter(m => m.id !== id);
+                await deleteVideoBlob(id);
                 saveData();
                 renderGrid();
                 renderAdminMediaList();
@@ -1143,8 +1192,6 @@
                 container.appendChild(el);
             });
         }
-
-        renderGrid();
     </script>
 </body>
 </html>
