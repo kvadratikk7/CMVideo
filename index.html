@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMVideo — Онлайн Кинотеатр</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f1015;
+            --card-bg: #1a1c23;
+            --accent-color: #e50914;
+            --accent-hover: #b80710;
+            --text-main: #f5f5f7;
+            --text-secondary: #9ca3af;
+            --border-color: #2e323e;
+            --star-gold: #ffc107;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(15, 16, 21, 0.95);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+
+        .logo-svg {
+            width: 42px;
+            height: 42px;
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(45deg, #e50914, #ff5555);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        nav {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            color: var(--text-main);
+            background: var(--card-bg);
+        }
+
+        .search-admin {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 8px 16px 8px 38px;
+            color: var(--text-main);
+            outline: none;
+            width: 220px;
+            transition: width 0.3s ease;
+        }
+
+        .search-box input:focus {
+            width: 280px;
+            border-color: var(--accent-color);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .admin-trigger {
+            background: linear-gradient(45deg, #333, #444);
+            color: #fff;
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        main {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+            flex: 1;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid var(--accent-color);
+            padding-left: 10px;
+        }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 3rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        .card-img-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 600 / 900;
+            overflow: hidden;
+            background: #222;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.75);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--star-gold);
+            backdrop-filter: blur(4px);
+        }
+
+        .card-type {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: var(--accent-color);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .card-info {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-desc {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.3;
+        }
+
+        /* Modal Player View */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-content {
+            max-width: 900px;
+            margin: 40px auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.8rem;
+            color: #fff;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .player-wrapper {
+            position: relative;
+            width: 100%;
+            background: #000;
+        }
+
+        video {
+            width: 100%;
+            max-height: 500px;
+            display: block;
+        }
+
+        .player-controls-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #111;
+            padding: 10px 15px;
+            gap: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .player-controls-bar select, .player-controls-bar button {
+            background: var(--card-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .details-container {
+            padding: 20px;
+        }
+
+        .details-title {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .details-meta {
+            display: flex;
+            gap: 15px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .details-desc {
+            line-height: 1.6;
+            margin-bottom: 25px;
+            color: #ddd;
+        }
+
+        /* Reviews Section */
+        .reviews-section {
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .reviews-header {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+
+        .add-review-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #12141a;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 5px;
+            font-size: 1.4rem;
+            color: #555;
+            cursor: pointer;
+        }
+
+        .star-rating i.active {
+            color: var(--star-gold);
+        }
+
+        .add-review-form textarea {
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 6px;
+            padding: 10px;
+            resize: vertical;
+            height: 70px;
+            outline: none;
+        }
+
+        .btn-submit {
+            align-self: flex-end;
+            background: var(--accent-color);
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .reviews-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .review-card {
+            background: #12141a;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-color);
+        }
+
+        .review-top {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Admin Modal */
+        .admin-modal-content {
+            max-width: 550px;
+            margin: 60px auto;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            background: #101117;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-main);
+            outline: none;
+        }
+
+        .admin-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        .admin-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .admin-item:last-child {
+            border-bottom: none;
+        }
+
+        .btn-delete {
+            background: #d32f2f;
+            color: #fff;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container" onclick="filterCategory('all')">
+            <svg class="logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100" height="100" rx="20" fill="url(#logo-grad)"/>
+                <path d="M35 30L72 50L35 70V30Z" fill="#FFFFFF"/>
+                <defs>
+                    <linearGradient id="logo-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#E50914"/>
+                        <stop offset="1" stop-color="#800000"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <span class="logo-text">CMVideo</span>
+        </div>
+
+        <nav>
+            <button class="nav-btn active" onclick="filterCategory('all', this)">Все</button>
+            <button class="nav-btn" onclick="filterCategory('movie', this)">Фильмы</button>
+            <button class="nav-btn" onclick="filterCategory('cartoon', this)">Мультфильмы</button>
+            <button class="nav-btn" onclick="filterCategory('popular', this)">Популярное</button>
+            <button class="nav-btn" onclick="filterCategory('new', this)">Новинки</button>
+        </nav>
+
+        <div class="search-admin">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Поиск..." oninput="handleSearch()">
+            </div>
+            <button class="admin-trigger" onclick="openAdminModal()">
+                <i class="fas fa-lock"></i> Админка
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <h2 class="section-title" id="sectionTitle">Все видео</h2>
+        <div class="media-grid" id="mediaGrid"></div>
+    </main>
+
+    <!-- Player Modal -->
+    <div class="modal" id="playerModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closePlayer()">&times;</span>
+            <div class="player-wrapper">
+                <video id="mainPlayer" controls></video>
+            </div>
+            <div class="player-controls-bar">
+                <div>
+                    <label style="font-size: 0.85rem; color: #aaa;">Скорость: </label>
+                    <select id="speedSelect" onchange="changeSpeed(this.value)">
+                        <option value="0.5">0.5x</option>
+                        <option value="0.75">0.75x</option>
+                        <option value="1" selected>1.0x (Норм)</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2">2.0x</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 0.85rem; color: #aaa;">Качество: </label>
+                    <select id="qualitySelect" onchange="changeQuality(this.value)">
+                        <option value="auto" selected>Авто</option>
+                        <option value="1080">1080p Full HD</option>
+                        <option value="720">720p HD</option>
+                        <option value="480">480p SD</option>
+                    </select>
+                </div>
+            </div>
+            <div class="details-container">
+                <h1 class="details-title" id="modalTitle"></h1>
+                <div class="details-meta">
+                    <span id="modalCategory"></span>
+                    <span>•</span>
+                    <span id="modalRating" style="color: var(--star-gold);"><i class="fas fa-star"></i> 0.0</span>
+                </div>
+                <p class="details-desc" id="modalDesc"></p>
+
+                <div class="reviews-section">
+                    <h3 class="reviews-header">Отзывы зрителей</h3>
+                    <div class="add-review-form">
+                        <div class="star-rating" id="starRating">
+                            <i class="fas fa-star" data-val="1" onclick="setRating(1)"></i>
+                            <i class="fas fa-star" data-val="2" onclick="setRating(2)"></i>
+                            <i class="fas fa-star" data-val="3" onclick="setRating(3)"></i>
+                            <i class="fas fa-star" data-val="4" onclick="setRating(4)"></i>
+                            <i class="fas fa-star" data-val="5" onclick="setRating(5)"></i>
+                        </div>
+                        <textarea id="reviewText" placeholder="Оставьте ваш отзыв о фильме..."></textarea>
+                        <button class="btn-submit" onclick="submitReview()">Отправить</button>
+                    </div>
+                    <div class="reviews-list" id="reviewsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Modal -->
+    <div class="modal" id="adminModal">
+        <div class="admin-modal-content">
+            <span class="close-modal" onclick="closeAdmin()">&times;</span>
+            <div id="adminAuth">
+                <h3 style="margin-bottom: 15px;">Вход в Админ-панель</h3>
+                <div class="form-group">
+                    <label>Введите секретный код доступа:</label>
+                    <input type="password" id="adminCodeInput" placeholder="Код...">
+                </div>
+                <button class="btn-submit" style="width:100%" onclick="verifyAdmin()">Войти</button>
+            </div>
+            <div id="adminPanel" style="display: none;">
+                <h3 style="margin-bottom: 15px;">Добавление контента</h3>
+                <div class="form-group">
+                    <label>Название</label>
+                    <input type="text" id="addTitle" placeholder="Пример: Наруто / Интерстеллар">
+                </div>
+                <div class="form-group">
+                    <label>Тип</label>
+                    <select id="addType">
+                        <option value="movie">Фильм</option>
+                        <option value="cartoon">Мультфильм</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Ссылка на видео (MP4 / WebM)</label>
+                    <input type="text" id="addVideoUrl" placeholder="https://domain.com/video.mp4">
+                </div>
+                <div class="form-group">
+                    <label>Ссылка на обложку (600x900 .jpg/.png)</label>
+                    <input type="text" id="addPosterUrl" placeholder="https://domain.com/poster.jpg">
+                </div>
+                <div class="form-group">
+                    <label>Описание</label>
+                    <textarea id="addDesc" rows="3" placeholder="Краткое описание..."></textarea>
+                </div>
+                <button class="btn-submit" style="width:100%" onclick="addMediaItem()">Добавить в каталог</button>
+
+                <h4 style="margin-top: 20px; margin-bottom: 10px;">Управление текущими медиа:</h4>
+                <div class="admin-list" id="adminMediaList"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 CMVideo — Современная стриминговая платформа.
+    </footer>
+
+    <script>
+        // Initial Demo Data
+        const initialData = [
+            {
+                id: 1,
+                title: "Большой Заяц: Праздник",
+                type: "cartoon",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                posterUrl: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop",
+                desc: "Увлекательные приключения лесных жителей и большого зайца на поляне.",
+                isNew: true,
+                views: 1450,
+                reviews: [
+                    { rating: 5, text: "Отличный мультик для всей семьи!", date: "01.11.2026" },
+                    { rating: 4, text: "Красивая графика и добрый сюжет.", date: "05.11.2026" }
+                ]
+            },
+            {
+                id: 2,
+                title: "Синтетический Город 2077",
+                type: "movie",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                posterUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop",
+                desc: "Фантастический триллер о будущем человечества и робототехнике.",
+                isNew: false,
+                views: 3200,
+                reviews: [
+                    { rating: 5, text: "Шедевр кинематографа!", date: "02.10.2026" }
+                ]
+            },
+            {
+                id: 3,
+                title: "Стальной Следопыт",
+                type: "movie",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+                posterUrl: "https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?w=600&auto=format&fit=crop",
+                desc: "Группа защитников пытается восстановить порядок в разрушенном футуристическом Амстердаме.",
+                isNew: true,
+                views: 5100,
+                reviews: [
+                    { rating: 4, text: "Спецэффекты на высоте!", date: "08.11.2026" }
+                ]
+            }
+        ];
+
+        let mediaData = JSON.parse(localStorage.getItem('cmvideo_data')) || initialData;
+        let currentActiveItem = null;
+        let currentRatingInput = 5;
+
+        function saveData() {
+            localStorage.setItem('cmvideo_data', JSON.stringify(mediaData));
+        }
+
+        function calculateAvgRating(reviews) {
+            if (!reviews || reviews.length === 0) return 0;
+            const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+            return (sum / reviews.length).toFixed(1);
+        }
+
+        function renderGrid(filter = 'all', searchQuery = '') {
+            const grid = document.getElementById('mediaGrid');
+            grid.innerHTML = '';
+
+            let filtered = mediaData.filter(item => {
+                const matchSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                    item.desc.toLowerCase().includes(searchQuery.toLowerCase());
+                
+                if (!matchSearch) return false;
+
+                if (filter === 'all') return true;
+                if (filter === 'movie') return item.type === 'movie';
+                if (filter === 'cartoon') return item.type === 'cartoon';
+                if (filter === 'new') return item.isNew;
+                if (filter === 'popular') return item.views > 2000;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #888; padding: 40px 0;">Ничего не найдено</p>';
+                return;
+            }
+
+            filtered.forEach(item => {
+                const avg = calculateAvgRating(item.reviews);
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => openPlayer(item.id);
+                card.innerHTML = `
+                    <div class="card-img-wrap">
+                        <img class="card-img" src="${item.posterUrl}" alt="${item.title}" onerror="this.src='https://via.placeholder.com/600x900?text=No+Cover'">
+                        <span class="card-type">${item.type === 'movie' ? 'Фильм' : 'Мульт'}</span>
+                        <span class="card-badge"><i class="fas fa-star"></i> ${avg > 0 ? avg : 'Новый'}</span>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-title">${item.title}</div>
+                        <div class="card-desc">${item.desc}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterCategory(cat, btn = null) {
+            if (btn) {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+            
+            const titles = {
+                all: 'Все видео',
+                movie: 'Фильмы',
+                cartoon: 'Мультфильмы',
+                popular: 'Популярное',
+                new: 'Новинки'
+            };
+            document.getElementById('sectionTitle').innerText = titles[cat] || 'Каталог';
+            renderGrid(cat, document.getElementById('searchInput').value);
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value;
+            renderGrid('all', query);
+        }
+
+        /* Player Functions */
+        function openPlayer(id) {
+            currentActiveItem = mediaData.find(m => m.id === id);
+            if (!currentActiveItem) return;
+
+            currentActiveItem.views += 1;
+            saveData();
+
+            const player = document.getElementById('mainPlayer');
+            player.src = currentActiveItem.videoUrl;
+            document.getElementById('modalTitle').innerText = currentActiveItem.title;
+            document.getElementById('modalCategory').innerText = currentActiveItem.type === 'movie' ? 'Фильм' : 'Мультфильм';
+            document.getElementById('modalDesc').innerText = currentActiveItem.desc;
+            
+            updateModalRating();
+            renderReviews();
+            setRating(5);
+
+            document.getElementById('playerModal').style.display = 'block';
+            player.play().catch(() => {});
+        }
+
+        function closePlayer() {
+            const player = document.getElementById('mainPlayer');
+            player.pause();
+            player.src = '';
+            document.getElementById('playerModal').style.display = 'none';
+        }
+
+        function changeSpeed(val) {
+            document.getElementById('mainPlayer').playbackRate = parseFloat(val);
+        }
+
+        function changeQuality(val) {
+            alert(`Переключено качество на: ${val === 'auto' ? 'Автоматическое' : val + 'p'}`);
+        }
+
+        /* Reviews Functions */
+        function setRating(val) {
+            currentRatingInput = val;
+            const stars = document.querySelectorAll('#starRating i');
+            stars.forEach((s, idx) => {
+                if (idx < val) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+        }
+
+        function updateModalRating() {
+            const avg = calculateAvgRating(currentActiveItem.reviews);
+            document.getElementById('modalRating').innerHTML = `<i class="fas fa-star"></i> ${avg > 0 ? avg : '0.0'} (${currentActiveItem.reviews ? currentActiveItem.reviews.length : 0})`;
+        }
+
+        function submitReview() {
+            const text = document.getElementById('reviewText').value.trim();
+            if (!text) {
+                alert('Пожалуйста, напишите текст отзыва.');
+                return;
+            }
+
+            if (!currentActiveItem.reviews) currentActiveItem.reviews = [];
+            
+            const newRev = {
+                rating: currentRatingInput,
+                text: text,
+                date: new Date().toLocaleDateString('ru-RU')
+            };
+
+            currentActiveItem.reviews.unshift(newRev);
+            saveData();
+            
+            document.getElementById('reviewText').value = '';
+            renderReviews();
+            updateModalRating();
+            renderGrid();
+        }
+
+        function renderReviews() {
+            const container = document.getElementById('reviewsList');
+            container.innerHTML = '';
+
+            if (!currentActiveItem.reviews || currentActiveItem.reviews.length === 0) {
+                container.innerHTML = '<p style="color: #777; font-size: 0.85rem;">Пока нет отзывов. Будьте первым!</p>';
+                return;
+            }
+
+            currentActiveItem.reviews.forEach(r => {
+                const item = document.createElement('div');
+                item.className = 'review-card';
+                let starsHtml = '';
+                for (let i = 1; i <= 5; i++) {
+                    starsHtml += `<i class="fas fa-star" style="color: ${i <= r.rating ? 'var(--star-gold)' : '#444'}"></i>`;
+                }
+
+                item.innerHTML = `
+                    <div class="review-top">
+                        <span>${starsHtml}</span>
+                        <span>${r.date}</span>
+                    </div>
+                    <div style="font-size: 0.9rem;">${r.text}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        /* Admin Panel Functions */
+        function openAdminModal() {
+            document.getElementById('adminModal').style.display = 'block';
+        }
+
+        function closeAdmin() {
+            document.getElementById('adminModal').style.display = 'none';
+        }
+
+        function verifyAdmin() {
+            const code = document.getElementById('adminCodeInput').value;
+            if (code === '2452_1726') {
+                document.getElementById('adminAuth').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                renderAdminMediaList();
+            } else {
+                alert('Неверный код доступа!');
+            }
+        }
+
+        function addMediaItem() {
+            const title = document.getElementById('addTitle').value.trim();
+            const type = document.getElementById('addType').value;
+            const videoUrl = document.getElementById('addVideoUrl').value.trim();
+            const posterUrl = document.getElementById('addPosterUrl').value.trim();
+            const desc = document.getElementById('addDesc').value.trim();
+
+            if (!title || !videoUrl || !posterUrl) {
+                alert('Заполните все обязательные поля (Название, Ссылка на видео, Обложка)!');
+                return;
+            }
+
+            const newItem = {
+                id: Date.now(),
+                title,
+                type,
+                videoUrl,
+                posterUrl,
+                desc: desc || 'Без описания.',
+                isNew: true,
+                views: 0,
+                reviews: []
+            };
+
+            mediaData.unshift(newItem);
+            saveData();
+            renderGrid();
+            renderAdminMediaList();
+
+            // Clear inputs
+            document.getElementById('addTitle').value = '';
+            document.getElementById('addVideoUrl').value = '';
+            document.getElementById('addPosterUrl').value = '';
+            document.getElementById('addDesc').value = '';
+            alert('Медиа успешно добавлено в каталог!');
+        }
+
+        function deleteMediaItem(id) {
+            if (confirm('Вы уверены, что хотите удалить этот элемент?')) {
+                mediaData = mediaData.filter(m => m.id !== id);
+                saveData();
+                renderGrid();
+                renderAdminMediaList();
+            }
+        }
+
+        function renderAdminMediaList() {
+            const list = document.getElementById('adminMediaList');
+            list.innerHTML = '';
+            mediaData.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'admin-item';
+                el.innerHTML = `
+                    <span><strong>${item.title}</strong> (${item.type === 'movie' ? 'Фильм' : 'Мульт'})</span>
+                    <button class="btn-delete" onclick="deleteMediaItem(${item.id})">Удалить</button>
+                `;
+                list.appendChild(el);
+            });
+        }
+
+        // Init App
+        renderGrid();
+    </script>
+</body>
+</html>
