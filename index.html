@@ -456,6 +456,11 @@
             font-size: 0.8rem;
             cursor: pointer;
             padding: 2px 4px;
+            display: none; /* Hidden by default, visible only for admin */
+        }
+
+        .admin-logged .btn-del-comment {
+            display: inline-block;
         }
 
         /* Admin Modal Styling */
@@ -474,7 +479,7 @@
             margin-bottom: 4px;
         }
 
-        .form-group input[type="text"], .form-group select, .form-group textarea {
+        .form-group input[type="text"], .form-group select, .form-group textarea, .form-group input[type="password"] {
             width: 100%;
             padding: 10px;
             background: var(--card-bg);
@@ -548,7 +553,7 @@
         }
     </style>
 </head>
-<body>
+<body id="bodyRoot">
 
     <header>
         <div class="header-left">
@@ -670,8 +675,8 @@
             <div class="admin-body">
                 <div id="adminAuth">
                     <div class="form-group">
-                        <label>Введите код доступа:</label>
-                        <input type="password" id="adminCodeInput" placeholder="Введите код">
+                        <label>Введите код:</label>
+                        <input type="password" id="adminCodeInput" placeholder="Код...">
                     </div>
                     <button class="btn-submit" style="width: 100%; margin-top: 10px;" onclick="verifyAdmin()">Войти</button>
                 </div>
@@ -757,6 +762,7 @@
         let currentItem = null;
         let selectedRating = 5;
         let tempCoverBase64 = '';
+        let isAdminLoggedIn = false;
 
         function saveData() {
             try {
@@ -932,6 +938,10 @@
         }
 
         function deleteComment(commId) {
+            if (!isAdminLoggedIn) {
+                alert('Удалять отзывы может только администратор!');
+                return;
+            }
             if (confirm('Удалить этот комментарий?')) {
                 currentItem.reviews = currentItem.reviews.filter(c => c.id !== commId);
                 saveData();
@@ -981,6 +991,8 @@
         function verifyAdmin() {
             const input = document.getElementById('adminCodeInput').value;
             if (input === '2452_1726') {
+                isAdminLoggedIn = true;
+                document.getElementById('bodyRoot').classList.add('admin-logged');
                 document.getElementById('adminAuth').style.display = 'none';
                 document.getElementById('adminPanel').style.display = 'block';
                 renderAdminMediaList();
@@ -1014,7 +1026,6 @@
             }
 
             if (editId) {
-                // Editing existing item
                 const targetIndex = mediaData.findIndex(m => m.id == editId);
                 if (targetIndex !== -1) {
                     mediaData[targetIndex].title = title;
@@ -1027,7 +1038,6 @@
                 }
                 alert('Элемент успешно обновлен!');
             } else {
-                // Adding new item
                 const newItem = {
                     id: Date.now(),
                     title: title,
