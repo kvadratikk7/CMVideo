@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CMVideo — Mobile & Edit Edition</title>
+    <title>CMVideo — Ultimate Edition</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -456,7 +456,7 @@
             font-size: 0.8rem;
             cursor: pointer;
             padding: 2px 4px;
-            display: none; /* Hidden by default, visible only for admin */
+            display: none;
         }
 
         .admin-logged .btn-del-comment {
@@ -697,10 +697,15 @@
                         </select>
                     </div>
 
-                    <!-- Video Source: supports direct link or iframe embed code -->
+                    <!-- Video Source: supports direct link, iframe embed code OR file upload from phone -->
                     <div class="form-group">
-                        <label>Ссылка на видео ИЛИ IFrame код</label>
+                        <label>Источник видео (Прямая ссылка, IFrame код ИЛИ файл с телефона)</label>
                         <input type="text" id="addVideoUrl" placeholder="https://...mp4 ИЛИ тег iframe">
+                        <div style="margin-top: 6px;" class="file-input-wrapper">
+                            <label class="file-label" for="videoFileHidden"><i class="fas fa-file-video"></i> Или загрузить видеофайл с телефона</label>
+                            <input type="file" id="videoFileHidden" accept="video/*" onchange="handleVideoFileSelect(this)">
+                            <div class="file-name-preview" id="videoFileName">Видеофайл не выбран</div>
+                        </div>
                     </div>
 
                     <!-- File Upload Cover 1:1 Image from Phone -->
@@ -758,17 +763,18 @@
             }
         ];
 
-        let mediaData = JSON.parse(localStorage.getItem('cmvideo_iframe_db')) || defaultData;
+        let mediaData = JSON.parse(localStorage.getItem('cmvideo_ultimate_db')) || defaultData;
         let currentItem = null;
         let selectedRating = 5;
         let tempCoverBase64 = '';
+        let tempVideoBase64 = '';
         let isAdminLoggedIn = false;
 
         function saveData() {
             try {
-                localStorage.setItem('cmvideo_iframe_db', JSON.stringify(mediaData));
+                localStorage.setItem('cmvideo_ultimate_db', JSON.stringify(mediaData));
             } catch(e) {
-                alert('Память заполнена!');
+                alert('Память устройства переполнена! Видеофайл слишком большой для LocalStorage.');
             }
         }
 
@@ -1013,15 +1019,32 @@
             reader.readAsDataURL(file);
         }
 
+        function handleVideoFileSelect(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                tempVideoBase64 = e.target.result;
+                document.getElementById('videoFileName').innerText = file.name;
+                document.getElementById('addVideoUrl').value = '[Загружено с телефона]';
+            };
+            reader.readAsDataURL(file);
+        }
+
         function addOrUpdateMediaItem() {
             const editId = document.getElementById('editMediaId').value;
             const title = document.getElementById('addTitle').value.trim();
             const type = document.getElementById('addType').value;
-            const videoUrl = document.getElementById('addVideoUrl').value.trim();
+            let videoUrl = document.getElementById('addVideoUrl').value.trim();
             const desc = document.getElementById('addDesc').value.trim();
 
+            if (tempVideoBase64) {
+                videoUrl = tempVideoBase64;
+            }
+
             if (!title || !videoUrl) {
-                alert('Пожалуйста, введите название и укажите ссылку на видео или iframe код!');
+                alert('Пожалуйста, введите название и укажите ссылку на видео, IFrame код или выберите файл с телефона!');
                 return;
             }
 
@@ -1030,7 +1053,9 @@
                 if (targetIndex !== -1) {
                     mediaData[targetIndex].title = title;
                     mediaData[targetIndex].type = type;
-                    mediaData[targetIndex].videoUrl = videoUrl;
+                    if (videoUrl !== '[Загружено с телефона]') {
+                        mediaData[targetIndex].videoUrl = videoUrl;
+                    }
                     mediaData[targetIndex].desc = desc || 'Без описания.';
                     if (tempCoverBase64) {
                         mediaData[targetIndex].posterUrl = tempCoverBase64;
@@ -1066,13 +1091,15 @@
             document.getElementById('editMediaId').value = item.id;
             document.getElementById('addTitle').value = item.title;
             document.getElementById('addType').value = item.type;
-            document.getElementById('addVideoUrl').value = item.videoUrl;
+            document.getElementById('addVideoUrl').value = item.videoUrl.startsWith('data:') ? '[Видео с телефона]' : item.videoUrl;
             document.getElementById('addDesc').value = item.desc;
             
             document.getElementById('adminFormHeader').innerText = 'Редактировать контент';
             document.getElementById('btnSaveMedia').innerText = 'Сохранить изменения';
             document.getElementById('btnCancelEdit').style.display = 'block';
             document.getElementById('coverFileName').innerText = 'Оставьте пустым, чтобы не менять обложку';
+            document.getElementById('videoFileName').innerText = 'Видеофайл не выбран (останется прежним)';
+            tempVideoBase64 = '';
         }
 
         function resetAdminForm() {
@@ -1081,7 +1108,9 @@
             document.getElementById('addVideoUrl').value = '';
             document.getElementById('addDesc').value = '';
             document.getElementById('coverFileName').innerText = 'Файл не выбран (или останется прежним)';
+            document.getElementById('videoFileName').innerText = 'Видеофайл не выбран';
             tempCoverBase64 = '';
+            tempVideoBase64 = '';
 
             document.getElementById('adminFormHeader').innerText = 'Добавить контент';
             document.getElementById('btnSaveMedia').innerText = 'Добавить в каталог';
