@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CMVideo — Mobile Edition</title>
+    <title>CMVideo — IFrame Edition</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -317,12 +317,23 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            min-height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        video {
+        video, .iframe-wrapper {
             width: 100%;
-            max-height: 260px;
+            height: 240px;
             display: block;
+            border: none;
+        }
+
+        .iframe-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
 
         .player-controls-bar {
@@ -581,28 +592,28 @@
                 <span id="modalHeaderTitle" style="font-weight: bold; font-size: 0.95rem;">Просмотр</span>
                 <i class="fas fa-times" style="font-size: 1.3rem; cursor: pointer;" onclick="closePlayer()"></i>
             </div>
-            <div class="video-container">
-                <video id="mainPlayer" controls playsinline></video>
-                <div class="player-controls-bar">
-                    <div>
-                        <label>Скорость: </label>
-                        <select id="speedSelect" onchange="changeSpeed(this.value)">
-                            <option value="0.5">0.5x</option>
-                            <option value="1" selected>1.0x</option>
-                            <option value="1.25">1.25x</option>
-                            <option value="1.5">1.5x</option>
-                            <option value="2">2.0x</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Качество: </label>
-                        <select onchange="alert('Переключено качество на ' + this.value)">
-                            <option value="Auto">Auto</option>
-                            <option value="1080p">1080p</option>
-                            <option value="720p">720p</option>
-                            <option value="480p">480p</option>
-                        </select>
-                    </div>
+            <div class="video-container" id="playerContainer">
+                <!-- Dynamic Player: Video or IFrame -->
+            </div>
+            <div class="player-controls-bar" id="controlsBar">
+                <div>
+                    <label>Скорость: </label>
+                    <select id="speedSelect" onchange="changeSpeed(this.value)">
+                        <option value="0.5">0.5x</option>
+                        <option value="1" selected>1.0x</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2">2.0x</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Качество: </label>
+                    <select onchange="alert('Переключено качество на ' + this.value)">
+                        <option value="Auto">Auto</option>
+                        <option value="1080p">1080p</option>
+                        <option value="720p">720p</option>
+                        <option value="480p">480p</option>
+                    </select>
                 </div>
             </div>
 
@@ -645,7 +656,7 @@
                 <div id="adminAuth">
                     <div class="form-group">
                         <label>Введите код доступа:</label>
-                        <input type="password" id="adminCodeInput" placeholder="Введите код">
+                        <input type="password" id="adminCodeInput" placeholder="Код (2452_1726)">
                     </div>
                     <button class="btn-submit" style="width: 100%; margin-top: 10px;" onclick="verifyAdmin()">Войти</button>
                 </div>
@@ -664,10 +675,10 @@
                         </select>
                     </div>
 
-                    <!-- Direct Video URL Link Input -->
+                    <!-- Video Source: supports direct link or iframe embed code -->
                     <div class="form-group">
-                        <label>Ссылка на видео (MP4 / WebM / Прямая ссылка)</label>
-                        <input type="text" id="addVideoUrl" placeholder="https://commondatastorage.googleapis.com/...mp4">
+                        <label>Прямая ссылка на видео ИЛИ IFrame код (например: &lt;iframe src="..."&gt;&lt;/iframe&gt;)</label>
+                        <input type="text" id="addVideoUrl" placeholder="https://...mp4 ИЛИ тег iframe">
                     </div>
 
                     <!-- File Upload Cover 1:1 Image from Phone -->
@@ -695,7 +706,6 @@
     </div>
 
     <script>
-        // Working Demo Videos with MP4 URLs
         const defaultData = [
             {
                 id: 1,
@@ -723,20 +733,19 @@
             }
         ];
 
-        let mediaData = JSON.parse(localStorage.getItem('cmvideo_mobile_db')) || defaultData;
+        let mediaData = JSON.parse(localStorage.getItem('cmvideo_iframe_db')) || defaultData;
         let currentItem = null;
         let selectedRating = 5;
         let tempCoverBase64 = '';
 
         function saveData() {
             try {
-                localStorage.setItem('cmvideo_mobile_db', JSON.stringify(mediaData));
+                localStorage.setItem('cmvideo_iframe_db', JSON.stringify(mediaData));
             } catch(e) {
-                alert('Память устройства переполнена! Выберите изображение меньшего размера.');
+                alert('Память заполнена!');
             }
         }
 
-        /* Side Drawer */
         function toggleDrawer(open) {
             const drawer = document.getElementById('sideDrawer');
             const overlay = document.getElementById('drawerOverlay');
@@ -815,7 +824,7 @@
             renderGrid('all', document.getElementById('searchInput').value);
         }
 
-        /* Player */
+        /* Player with Smart IFrame / Video detection */
         function openPlayer(id) {
             currentItem = mediaData.find(m => m.id === id);
             if (!currentItem) return;
@@ -823,8 +832,26 @@
             currentItem.views += 1;
             saveData();
 
-            const player = document.getElementById('mainPlayer');
-            player.src = currentItem.videoUrl;
+            const container = document.getElementById('playerContainer');
+            const controlsBar = document.getElementById('controlsBar');
+            
+            // Check if videoUrl is an iframe tag or contains iframe/embed link
+            const isIframe = currentItem.videoUrl.trim().toLowerCase().startsWith('<iframe') || currentItem.videoUrl.includes('vewo.io') || currentItem.videoUrl.includes('embed');
+
+            if (isIframe) {
+                controlsBar.style.display = 'none'; // Hide native video speed/quality controls for iframe embeds
+                let iframeCode = currentItem.videoUrl;
+                if (!iframeCode.toLowerCase().startsWith('<iframe')) {
+                    iframeCode = `<iframe src="${currentItem.videoUrl}" allowfullscreen></iframe>`;
+                }
+                container.innerHTML = `<div class="iframe-wrapper">${iframeCode}</div>`;
+            } else {
+                controlsBar.style.display = 'flex';
+                container.innerHTML = `<video id="mainPlayer" controls playsinline src="${currentItem.videoUrl}"></video>`;
+                const player = document.getElementById('mainPlayer');
+                player.play().catch(() => {});
+            }
+
             document.getElementById('modalHeaderTitle').innerText = currentItem.title;
             document.getElementById('modalTitle').innerText = currentItem.title;
             document.getElementById('modalCategory').innerText = currentItem.type === 'movie' ? 'Фильм' : 'Мультфильм';
@@ -835,18 +862,21 @@
             setRating(5);
 
             document.getElementById('playerModal').style.display = 'block';
-            player.play().catch(() => {});
         }
 
         function closePlayer() {
             const player = document.getElementById('mainPlayer');
-            player.pause();
-            player.src = '';
+            if (player) {
+                player.pause();
+                player.src = '';
+            }
+            document.getElementById('playerContainer').innerHTML = '';
             document.getElementById('playerModal').style.display = 'none';
         }
 
         function changeSpeed(val) {
-            document.getElementById('mainPlayer').playbackRate = parseFloat(val);
+            const player = document.getElementById('mainPlayer');
+            if (player) player.playbackRate = parseFloat(val);
         }
 
         /* Comments */
@@ -959,7 +989,7 @@
             const desc = document.getElementById('addDesc').value.trim();
 
             if (!title || !videoUrl) {
-                alert('Пожалуйста, введите название и укажите ссылку на видео!');
+                alert('Пожалуйста, введите название и укажите ссылку на видео или iframe код!');
                 return;
             }
 
@@ -987,7 +1017,7 @@
             document.getElementById('coverFileName').innerText = 'Файл не выбран';
             tempCoverBase64 = '';
 
-            alert('Видео успешно добавлено в каталог!');
+            alert('Медиафайл успешно добавлен в каталог!');
         }
 
         function deleteMediaItem(id) {
@@ -1013,7 +1043,6 @@
             });
         }
 
-        // Init App
         renderGrid();
     </script>
 </body>
